@@ -3,80 +3,79 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import ProductCard from '../../../components/ProductCard';
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  categorySlug: string;
-  emoji: string;
-  unit: string;
-  currentPrice: number;
-  changePercentage: number;
-  changeType: 'up' | 'down' | 'flat';
-}
-
-const categoryNames: Record<string, { name: string; icon: string }> = {
-  chal: { name: 'চাল', icon: '🍚' },
-  dal: { name: 'ডাল', icon: '🫘' },
-  tel: { name: 'তেল', icon: '🫙' },
-  sobji: { name: 'সবজি', icon: '🥬' },
-  mach: { name: 'মাছ', icon: '🐟' },
-  mangsho: { name: 'মাংস', icon: '🍗' },
-  'dim-dudh': { name: 'ডিম-দুধ', icon: '🥚' },
-  mosla: { name: 'মসলা', icon: '🌶️' },
-};
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
-  const categorySlug = resolvedParams.slug;
-  const categoryInfo = categoryNames[categorySlug] || { name: categorySlug, icon: '🛒' };
-
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categoryInfo, setCategoryInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sortOption, setSortOption] = useState<'default' | 'low-to-high' | 'high-to-low'>('default');
 
   useEffect(() => {
-    fetch('https://api.api-store.workers.dev/api/bazardor/products')
+    setLoading(true);
+
+    // Fetch products by category endpoint from instructor's spec
+    fetch(`https://openapi.programming-hero.com/api/bazardor/products?category=${resolvedParams.slug}`)
       .then((res) => res.json())
       .then((data) => {
-        const filtered = (data.products || []).filter(
-          (p: Product) => p.categorySlug === categorySlug || p.category.toLowerCase() === categoryInfo.name
-        );
-        setProducts(filtered);
+        const productList = Array.isArray(data) ? data : data.products || data.data || [];
+        setProducts(productList);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [categorySlug, categoryInfo.name]);
 
-  // Sort products
+    // Fetch categories metadata for title and emoji icon
+    fetch('https://openapi.programming-hero.com/api/bazardor/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        const catList = Array.isArray(data) ? data : data.categories || data.data || [];
+        const found = catList.find((c: any) => 
+          (c.slug || c.id || c.categorySlug || '').toLowerCase() === resolvedParams.slug.toLowerCase()
+        );
+        setCategoryInfo(found || null);
+      });
+  }, [resolvedParams.slug]);
+
+  // Challenge C1: Sort logic handling Bengali numerals/prices correctly numerically
   const sortedProducts = [...products].sort((a, b) => {
-    if (sortOption === 'low-to-high') return a.currentPrice - b.currentPrice;
-    if (sortOption === 'high-to-low') return b.currentPrice - a.currentPrice;
+    const priceA = Number(a.today || a.currentPrice || 0);
+    const priceB = Number(b.today || b.currentPrice || 0);
+    if (sortOption === 'low-to-high') return priceA - priceB;
+    if (sortOption === 'high-to-low') return priceB - priceA;
     return 0;
   });
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F7F2] py-12 flex justify-center items-center">
+        <p className="text-gray-500 text-xs font-medium animate-pulse">পণ্যসমূহ লোড হচ্ছে...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F7F2] py-8">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4 space-y-6">
         
         {/* Category Header Card */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center justify-between mb-6">
+        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="text-4xl bg-gray-50 p-3 rounded-2xl border border-gray-100">
-              {categoryInfo.icon}
+            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl border border-gray-100">
+              {categoryInfo?.icon || categoryInfo?.categoryIcon || '🛒'}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{categoryInfo.name}</h1>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {products.length}টি পণ্যের আজকের দাম ও পরিবর্তন
+              <h1 className="text-2xl font-bold text-gray-900">
+                {categoryInfo?.nameBn || categoryInfo?.name || resolvedParams.slug}
+              </h1>
+              <p className="text-xs text-gray-500 mt-1">
+                {sortedProducts.length}টি পণ্যের আজকের দাম ও পরিবর্তন
               </p>
             </div>
           </div>
         </div>
 
-        {/* Sorting Dropdown Control */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex justify-between items-center mb-6">
+        {/* Sorting Control Bar (Challenge C1 Requirement) */}
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex justify-between items-center">
           <span className="text-xs text-gray-500 font-medium">
             মোট {sortedProducts.length}টি পণ্য দেখানো হচ্ছে
           </span>
@@ -95,21 +94,15 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
           </div>
         </div>
 
-        {/* Product Cards List or Skeleton/Empty State */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="bg-white p-5 rounded-xl border border-gray-200 animate-pulse h-32"></div>
-            ))}
-          </div>
-        ) : sortedProducts.length > 0 ? (
+        {/* Product Cards List or Empty State */}
+        {sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sortedProducts.map((product) => (
-              <ProductCard key={product.slug} product={product} />
+              <ProductCard key={product.slug || product.id} product={product} />
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 my-8">
+          <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
             <div className="text-5xl mb-3">🔍</div>
             <h3 className="text-lg font-bold text-gray-800 mb-2">এই ক্যাটেগরিতে কোনো পণ্য পাওয়া যায়নি</h3>
             <p className="text-xs text-gray-500 mb-6">অন্য কোনো ক্যাটেগরি চেষ্টা করে দেখুন অথবা হোম পেজে ফিরে যান।</p>

@@ -1,14 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { authClient } from '../../lib/auth-client';
 
 export default function ProfilePage() {
-  const [name, setName] = useState('Rezwan Ahmed');
-  const [email] = useState('rezwanahmed@gmail.com');
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (session?.user) {
+      setName(session.user.name || '');
+      setEmail(session.user.email || '');
+    }
+  }, [session]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       toast.error('নামের ঘরটি ফাঁকা রাখা যাবে না');
@@ -16,17 +28,42 @@ export default function ProfilePage() {
     }
     setLoading(true);
 
-    // Simulated BetterAuth user update request (authClient.updateUser({ name }))
-    setTimeout(() => {
+    try {
+      const { error } = await authClient.updateUser({
+        name,
+      });
+
+      if (error) {
+        toast.error(error.message || 'তথ্য আপডেট করতে সমস্যা হয়েছে');
+        setLoading(false);
+        return;
+      }
+
       toast.success('তথ্য সফলভাবে আপডেট হয়েছে!');
+    } catch {
+      toast.error('একটি ত্রুটি ঘটেছে');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
-  const handleSignOut = () => {
-    toast.success('সফলভাবে সাইন আউট হয়েছে');
-    window.location.href = '/signin';
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut();
+      toast.success('সফলভাবে সাইন আউট হয়েছে');
+      router.push('/signin');
+    } catch {
+      toast.error('সাইন আউট করতে সমস্যা হয়েছে');
+    }
   };
+
+  if (isPending) {
+    return (
+      <div className="min-h-[80vh] bg-[#F5F7F2] flex items-center justify-center">
+        <p className="text-xs text-gray-500 animate-pulse">প্রোফাইল লোড হচ্ছে...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] bg-[#F5F7F2] py-10 px-4">
@@ -41,12 +78,20 @@ export default function ProfilePage() {
         {/* User Identity Card */}
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center text-2xl border border-gray-200">
-              👤
-            </div>
+            {session?.user?.image ? (
+              <img
+                src={session.user.image}
+                alt={name || 'Profile'}
+                className="w-16 h-16 rounded-2xl object-cover border border-gray-200"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center text-2xl border border-gray-200">
+                👤
+              </div>
+            )}
             <div>
-              <h2 className="text-lg font-bold text-gray-900">{name}</h2>
-              <p className="text-xs text-gray-500">{email}</p>
+              <h2 className="text-lg font-bold text-gray-900">{name || 'ইউজার'}</h2>
+              <p className="text-xs text-gray-500">{email || 'user@example.com'}</p>
             </div>
           </div>
           <button
@@ -57,9 +102,9 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Update Information Form (Challenge C3) */}
+        {/* Update Information Form */}
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-gray-900">তথ্য আপডেট করুন</h3>
+          <h3 className="text-sm font-bold text-gray-900">তথ্য</h3>
           
           <form onSubmit={handleUpdate} className="space-y-4">
             <div>
@@ -68,14 +113,14 @@ export default function ProfilePage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full text-xs px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50"
+                className="w-full text-xs px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 text-black"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium text-xs py-3 rounded-xl transition shadow-sm disabled:opacity-50"
+              className="w-full bg-[#009951] hover:bg-green-700 text-white font-medium text-xs py-3 rounded-xl transition shadow-sm disabled:opacity-50"
             >
               {loading ? 'আপডেট হচ্ছে...' : 'আপডেট করুন'}
             </button>

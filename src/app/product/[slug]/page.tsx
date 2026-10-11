@@ -2,175 +2,94 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import ProductCard from '../../../components/ProductCard';
 
-interface MarketData {
-  marketName: string;
-  division: string;
-  minPrice: number;
-  maxPrice: number;
-  avgPrice: number;
-}
-
-interface ProductDetails {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  categorySlug: string;
-  emoji: string;
-  unit: string;
-  currentPrice: number;
-  changePercentage: number;
-  changeType: 'up' | 'down' | 'flat';
-  description?: string;
-  markets?: MarketData[];
-}
-
-export default function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
-  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categoryInfo, setCategoryInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://api.api-store.workers.dev/api/bazardor/products`)
+    setLoading(true);
+
+    // Fetch products filtered by category using the instructor's API endpoint structure
+    fetch(`https://openapi.programming-hero.com/api/bazardor/products?category=${resolvedParams.slug}`)
       .then((res) => res.json())
       .then((data) => {
-        const found = data.products?.find((p: ProductDetails) => p.slug === resolvedParams.slug);
-        setProduct(found || null);
+        const productList = Array.isArray(data) ? data : data.products || data.data || [];
+        
+        // Fallback filter if backend returns all products
+        const filtered = productList.filter((p: any) => {
+          const catSlug = (p.categorySlug || p.category || p.slug || '').toLowerCase();
+          const targetSlug = resolvedParams.slug.toLowerCase();
+          return catSlug.includes(targetSlug) || targetSlug.includes(catSlug);
+        });
+
+        setProducts(filtered.length > 0 ? filtered : productList);
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    // Fetch category metadata
+    fetch('https://openapi.programming-hero.com/api/bazardor/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        const catList = Array.isArray(data) ? data : data.categories || data.data || [];
+        const found = catList.find((c: any) => 
+          (c.slug || c.id || c.categorySlug || '').toLowerCase() === resolvedParams.slug.toLowerCase()
+        );
+        setCategoryInfo(found || null);
+      });
   }, [resolvedParams.slug]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F7F2] py-12 flex justify-center items-center">
-        <div className="text-gray-500 font-medium">পণ্যটির বিস্তারিত তথ্য লোড হচ্ছে...</div>
+        <p className="text-gray-500 text-xs font-medium animate-pulse">পণ্যসমূহ লোড হচ্ছে...</p>
       </div>
     );
   }
-
-  if (!product) {
-    return (
-      <div className="min-h-screen bg-[#F5F7F2] py-20 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">পণ্যটি পাওয়া যায়নি</h2>
-        <Link href="/" className="bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 transition">
-          হোম পেজে ফিরে যান
-        </Link>
-      </div>
-    );
-  }
-
-  // Calculate prices if market data exists
-  const minPrice = product.markets?.length
-    ? Math.min(...product.markets.map((m) => m.minPrice))
-    : product.currentPrice;
-  const maxPrice = product.markets?.length
-    ? Math.max(...product.markets.map((m) => m.maxPrice))
-    : product.currentPrice;
-  const avgPrice = product.markets?.length
-    ? Math.round(product.markets.reduce((acc, m) => acc + m.avgPrice, 0) / product.markets.length)
-    : product.currentPrice;
 
   return (
     <div className="min-h-screen bg-[#F5F7F2] py-8">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4 space-y-6">
         
-        {/* Breadcrumb Navigation */}
-        <nav className="text-xs text-gray-500 mb-6 flex items-center gap-2">
-          <Link href="/" className="hover:text-green-600">হোম</Link>
-          <span>›</span>
-          <Link href={`/category/${product.categorySlug}`} className="hover:text-green-600">{product.category}</Link>
-          <span>›</span>
-          <span className="text-gray-800 font-medium">{product.name}</span>
-        </nav>
-
-        {/* Header Summary Box */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl bg-gray-50 p-4 rounded-2xl border border-gray-100">{product.emoji}</div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
-              <p className="text-xs text-gray-500 mt-1">{product.unit} - {product.category}</p>
-              <p className="text-xs text-gray-600 mt-2">
-                গতকালের তুলনায় আজ দাম {product.changeType === 'up' ? 'বেড়েছে' : 'কমেছে'} {product.changePercentage}%
-              </p>
-            </div>
+        {/* Category Header Card (Matches First Image) */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center gap-4">
+          <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl border border-gray-100">
+            {categoryInfo?.icon || categoryInfo?.categoryIcon || '🍚'}
           </div>
-
-          <div className="bg-green-50/60 border border-green-100 p-4 rounded-xl text-right min-w-[180px]">
-            <span className="text-xs text-gray-500 block">আজকের দাম</span>
-            <span className="text-2xl font-black text-gray-900">{product.currentPrice}</span>
-            <span className="text-xs text-gray-600 font-medium block">টাকা / {product.unit.replace('প্রতি ', '')}</span>
-            <span className={`text-xs font-semibold mt-1 inline-block px-2 py-0.5 rounded ${
-              product.changeType === 'up' ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100'
-            }`}>
-              {product.changeType === 'up' ? '▲' : '▼'} {product.changePercentage}%
-            </span>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {categoryInfo?.nameBn || categoryInfo?.name || resolvedParams.slug}
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              {products.length}টি পণ্যের আজকের দাম ও পরিবর্তন
+            </p>
           </div>
         </div>
 
-        {/* Price Summary Cards */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">দামের সারসংক্ষেপ</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-gray-200">
-              <span className="text-xs text-gray-500 font-medium block mb-1">সর্বনিম্ন দাম</span>
-              <div className="text-2xl font-extrabold text-green-600">{minPrice} টাকা</div>
-              <span className="text-[11px] text-gray-400 mt-1 block">সবচেয়ে কম দামের বাজার</span>
-            </div>
+        {/* Product Count & Grid Section */}
+        <div>
+          <p className="text-xs text-gray-500 mb-4">
+            মোট {products.length}টি পণ্য দেখানো হচ্ছে
+          </p>
 
-            <div className="bg-white p-5 rounded-2xl border border-gray-200">
-              <span className="text-xs text-gray-500 font-medium block mb-1">সর্বোচ্চ দাম</span>
-              <div className="text-2xl font-extrabold text-red-500">{maxPrice} টাকা</div>
-              <span className="text-[11px] text-gray-400 mt-1 block">সবচেয়ে বেশি দামের বাজার</span>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((product) => (
+                <ProductCard key={product.slug || product.id} product={product} />
+              ))}
             </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-gray-200">
-              <span className="text-xs text-gray-500 font-medium block mb-1">গড় দাম</span>
-              <div className="text-2xl font-extrabold text-gray-800">{avgPrice} টাকা</div>
-              <span className="text-[11px] text-gray-400 mt-1 block">{product.unit}-এর হিসাব</span>
+          ) : (
+            <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
+              <p className="text-gray-500 text-sm mb-4">এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি</p>
+              <Link href="/" className="bg-[#009951] text-white text-xs font-semibold px-5 py-2.5 rounded-xl hover:bg-green-700 transition">
+                হোম পেজে ফিরে যান
+              </Link>
             </div>
-          </div>
-        </div>
-
-        {/* Market Price Table */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900">বাজারভিত্তিক আজকের দাম</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-700">
-              <thead className="bg-gray-50 text-xs text-gray-500 uppercase border-b border-gray-100">
-                <tr>
-                  <th className="py-3.5 px-6 font-semibold">বাজার</th>
-                  <th className="py-3.5 px-6 font-semibold">বিভাগ</th>
-                  <th className="py-3.5 px-6 font-semibold">সর্বনিম্ন</th>
-                  <th className="py-3.5 px-6 font-semibold">সর্বোচ্চ</th>
-                  <th className="py-3.5 px-6 font-semibold">গড়</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {product.markets && product.markets.length > 0 ? (
-                  product.markets.map((m, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition">
-                      <td className="py-4 px-6 font-medium text-gray-900">{m.marketName}</td>
-                      <td className="py-4 px-6 text-gray-500">{m.division}</td>
-                      <td className="py-4 px-6 font-semibold text-green-600">{m.minPrice} টাকা</td>
-                      <td className="py-4 px-6 font-semibold text-red-500">{m.maxPrice} টাকা</td>
-                      <td className="py-4 px-6 font-bold text-gray-800">{m.avgPrice} টাকা</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-400">
-                      কোনো বাজারভিত্তিক তথ্য পাওয়া যায়নি।
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          )}
         </div>
 
       </div>
