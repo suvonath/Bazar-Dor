@@ -1,6 +1,7 @@
 import "./globals.css";
-import Navbar from "../components/Navbar";
+
 import { Toaster } from "react-hot-toast";
+import NavbarWrapper from "../components/NavbarWrapper";
 import Footer from "../components/Footer";
 
 export const metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({
     <html lang="bn">
       <body className="bg-[#F5F7F2] antialiased">
         <Toaster position="top-right" />
-        <Navbar />
+        <NavbarWrapper />
         <main>{children}</main>
         <Footer />
       </body>
