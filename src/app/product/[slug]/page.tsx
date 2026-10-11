@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { Suspense, useState, useEffect, use } from 'react';
 import Link from 'next/link';
 
 interface MarketData {
@@ -40,7 +40,11 @@ interface ProductDetails {
   markets?: MarketData[];
 }
 
-export default function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+interface ProductDetailsContentProps {
+  params: Promise<{ slug: string }>;
+}
+
+function ProductDetailsContent({ params }: ProductDetailsContentProps) {
   const resolvedParams = use(params);
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +85,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ slug:
   const productEmoji = product.emoji || product.image || product.categoryIcon || '🛒';
   const unitText = product.unit ? product.unit : 'কেজি';
 
-  // Safely parse markets list to guarantee numbers (Prevents NaN)
+  // Safely parse markets list to guarantee numbers
   const validMarkets = (product.markets || []).map((m: MarketData) => {
     const parsedMin = Number(m.minPrice ?? m.min_price ?? m.price ?? productPrice);
     const parsedMax = Number(m.maxPrice ?? m.max_price ?? m.price ?? productPrice);
@@ -155,7 +159,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ slug:
           </div>
         </div>
 
-        {/* Price Summary Cards (Fixes NaN) */}
+        {/* Price Summary Cards */}
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-gray-900">দামের সারসংক্ষেপ</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -220,5 +224,21 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ slug:
 
       </div>
     </div>
+  );
+}
+
+export default function ProductDetailsPage({ params }: ProductDetailsContentProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F5F7F2] py-12 flex justify-center items-center">
+          <p className="text-gray-500 text-xs font-medium animate-pulse">
+            পণ্যটির বিস্তারিত তথ্য লোড হচ্ছে...
+          </p>
+        </div>
+      }
+    >
+      <ProductDetailsContent params={params} />
+    </Suspense>
   );
 }

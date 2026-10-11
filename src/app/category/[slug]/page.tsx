@@ -8,11 +8,21 @@ type CategoryParams = {
   slug: string;
 };
 
+// Updated Product interface to match ProductCard expectations
 type Product = {
   id?: string | number;
-  slug?: string;
-  today?: string | number;
-  currentPrice?: string | number;
+  slug: string;
+  name: string;
+  nameBn: string;
+  unit: string;
+  today: number;
+  currentPrice?: number;
+  image?: string;
+  categoryIcon?: string;
+  change: {
+    dir: 'up' | 'down' | 'flat';
+    pct: number;
+  };
   [key: string]: any;
 };
 
@@ -70,9 +80,23 @@ function CategoryPageContent({ params }: CategoryPageContentProps) {
           categoriesResponse.json(),
         ]);
 
-        const productList = Array.isArray(productsData)
+        const rawProductList = Array.isArray(productsData)
           ? productsData
           : productsData.products ?? productsData.data ?? [];
+
+        // Normalize products to match Product type safely
+        const normalizedProducts: Product[] = rawProductList.map((p: any) => ({
+          ...p,
+          slug: p.slug || 'product',
+          name: p.name || 'পণ্য',
+          nameBn: p.nameBn || p.name || 'পণ্য',
+          unit: p.unit || 'কেজি',
+          today: Number(p.today || p.currentPrice || p.price || 0),
+          change: {
+            dir: p.change?.dir || p.changeType || 'flat',
+            pct: Number(p.change?.pct || p.changePercentage || 0),
+          },
+        }));
 
         const categoryList = Array.isArray(categoriesData)
           ? categoriesData
@@ -90,7 +114,7 @@ function CategoryPageContent({ params }: CategoryPageContentProps) {
           return categorySlug.toLowerCase() === normalizedSlug;
         });
 
-        setProducts(Array.isArray(productList) ? productList : []);
+        setProducts(normalizedProducts);
         setCategoryInfo(foundCategory ?? null);
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -115,8 +139,8 @@ function CategoryPageContent({ params }: CategoryPageContentProps) {
   }, [slug]);
 
   const sortedProducts = [...products].sort((a, b) => {
-    const priceA = Number(a.today ?? a.currentPrice ?? 0);
-    const priceB = Number(b.today ?? b.currentPrice ?? 0);
+    const priceA = a.today;
+    const priceB = b.today;
 
     if (sortOption === 'low-to-high') {
       return priceA - priceB;
@@ -208,7 +232,7 @@ function CategoryPageContent({ params }: CategoryPageContentProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sortedProducts.map((product, index) => (
               <ProductCard
-                key={product.slug ?? product.id ?? index}
+                key={product.slug ?? index}
                 product={product}
               />
             ))}
