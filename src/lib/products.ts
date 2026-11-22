@@ -52,13 +52,17 @@ export function formatPct(pct: number): string {
   return `${toBn(Math.abs(pct).toFixed(1))}%`;
 }
 
-const UNIT_LABELS: Record<string, string> = {
-  kg: "প্রতি কেজি",
-  dozen: "প্রতি ডজন",
-  litre: "প্রতি লিটার",
-  piece: "প্রতি পিস",
+const UNIT_NAMES: Record<string, string> = {
+  kg: "কেজি",
+  dozen: "ডজন",
+  litre: "লিটার",
+  piece: "পিস",
 };
 
+export function unitName(unit: string): string {
+  return UNIT_NAMES[unit] ?? unit;
+}
+
 export function unitLabel(unit: string): string {
-  return UNIT_LABELS[unit] ?? `প্রতি ${unit}`;
+  return `প্রতি ${unitName(unit)}`;
 }

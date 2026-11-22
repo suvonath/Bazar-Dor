@@ -1,40 +1,112 @@
-
-
-import Image from "next/image";
-import React, { Suspense } from "react";
+import Link from "next/link";
+import { Suspense } from "react";
 import Navlinks from "./Navlinks";
 import MarqueeSection from "./MarqueeSection";
+import { getSessionUser } from "@/lib/auth";
+import { signOutAction } from "@/app/actions/auth";
 
+const BasketIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-5 w-5"
+    aria-hidden="true"
+  >
+    <path d="M4 9h16l-1.4 8.6a2 2 0 0 1-2 1.7H7.4a2 2 0 0 1-2-1.7L4 9Z" />
+    <path d="m8.5 9 2.2-4.5M15.5 9l-2.2-4.5" />
+    <path d="M9.5 13v3M14.5 13v3" />
+  </svg>
+);
 
-const Header = () => {
- const date = new Date().toLocaleDateString("bn-BD", { dateStyle:'full'})
+const ChevronDown = () => (
+  <svg
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4 text-gray-500"
+    aria-hidden="true"
+  >
+    <path d="m6 8 4 4 4-4" />
+  </svg>
+);
+
+const Header = async () => {
+  const date = new Date().toLocaleDateString("bn-BD", { dateStyle: "full" });
+  const user = await getSessionUser();
 
   return (
-    <header>
-      <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-4 py-3">
-        <div className="flex gap-3 items-center">
-          <div className="bg-green-500 h-10 w-10 rounded flex justify-center items-center">
-            <Image
-              src="/logo-icon.png"
-              alt="Bazar-Dor logo"
-              height={30}
-              width={30}
-            />
-          </div>
+    <header className="bg-white">
+      <div className="border-b border-gray-100">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white">
+              <BasketIcon />
+            </span>
+            <span>
+              <span className="block text-xl font-bold leading-tight text-gray-900">
+                বাজার দর
+              </span>
+              <span className="block text-xs text-gray-500">{date}</span>
+            </span>
+          </Link>
 
-          <div>
-            <h2 className="text-xl font-bold">বাজার দর</h2>
-            <p className="text-sm text-gray-500">{date}</p>
-          </div>
-        </div>
+          {user ? (
+            <details className="relative">
+              <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-700">
+                  {user.name.slice(0, 1)}
+                </span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {user.name}
+                </span>
+                <ChevronDown />
+              </summary>
 
-        <div className="flex items-center gap-3">
-          <button>Profile</button>
-          <button>Sign Out</button>
+              <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
+                <p className="truncate px-3 py-2 text-xs text-gray-500">
+                  {user.email}
+                </p>
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    সাইন আউট
+                  </button>
+                </form>
+              </div>
+            </details>
+          ) : (
+            <nav aria-label="Authentication" className="flex items-center gap-2">
+              <Link
+                href="/sign-in"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-green-700"
+              >
+                সাইন ইন
+              </Link>
+              <Link
+                href="/sign-up"
+                className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-800"
+              >
+                সাইন আপ
+              </Link>
+            </nav>
+          )}
         </div>
       </div>
-      <Suspense fallback={<div>Loading...</div>}>
+
+      <Suspense fallback={<div className="h-11" />}>
         <Navlinks />
+      </Suspense>
+
+      <Suspense fallback={<div className="h-10" />}>
         <MarqueeSection />
       </Suspense>
     </header>

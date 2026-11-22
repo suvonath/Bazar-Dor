@@ -1,8 +1,20 @@
-
 import React from "react";
 import MarqueeText from "react-marquee-text";
 import "react-marquee-text/dist/styles.css";
 import type { Product } from "@/lib/products";
+import { formatPct, formatPrice, unitName } from "@/lib/products";
+
+const toneClass = (dir: Product["change"]["dir"]) => {
+  if (dir === "up") return "text-red-500";
+  if (dir === "down") return "text-emerald-600";
+  return "text-gray-400";
+};
+
+const arrow = (dir: Product["change"]["dir"]) => {
+  if (dir === "up") return "▲";
+  if (dir === "down") return "▼";
+  return "—";
+};
 
 const MarqueeSection = async () => {
   const res = await fetch(
@@ -20,26 +32,20 @@ const MarqueeSection = async () => {
       <div className="flex gap-8 border-y border-gray-200 py-2">
         {products.map((product) => (
           <div key={product.id} className="flex items-center gap-2">
-            <span>{product.image}</span>
+            <span aria-hidden="true">{product.image}</span>
 
             <span>{product.nameBn}</span>
 
-            <span>৳{product.today}/kg</span>
+            <span>
+              ৳{formatPrice(product.today)} টাকা/{unitName(product.unit)}
+            </span>
 
-            {product.change.dir === "up" ? (
-              <span className="text-red-500">▲</span>
-            ) : product.change.dir === "down" ? (
-              <span className="text-emerald-600">▼</span>
-            ) : null}
+            <span className={toneClass(product.change.dir)}>
+              {arrow(product.change.dir)}
+            </span>
 
-            <span
-              className={
-                product.change.dir === "up"
-                  ? "text-red-500"
-                  : "text-emerald-600"
-              }
-            >
-              {product.change.pct}%
+            <span className={toneClass(product.change.dir)}>
+              {formatPct(product.change.pct)}
             </span>
           </div>
         ))}
