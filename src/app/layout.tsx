@@ -21,7 +21,9 @@ export default function RootLayout({
   children,
 }: LayoutProps<"/">) {
   return (
-    <html lang="bn" className="h-full">
+    <html lang="bn"  
+    data-theme="light"
+    className="h-full">
       <body
         className={`${hindSiliguri.className} min-h-full flex flex-col antialiased`}
       >
