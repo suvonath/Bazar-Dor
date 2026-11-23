@@ -25,17 +25,57 @@ export interface Product {
   markets: Market[];
 }
 
-const PRODUCTS_URL =
-  "https://openapi.programming-hero.com/api/bazardor/products";
+export interface Category {
+  id: string;
+  slug: string;
+  nameBn: string;
+  icon: string;
+}
 
-export async function fetchProducts(): Promise<Product[]> {
-  const res = await fetch(PRODUCTS_URL);
+const API_URL = "https://openapi.programming-hero.com/api/bazardor";
+
+async function getJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
 
   if (!res.ok) {
-    throw new Error("Failed to fetch products");
+    throw new Error(`Failed to fetch ${url}`);
   }
 
   return res.json();
+}
+
+export async function fetchProducts(): Promise<Product[]> {
+  return getJson<Product[]>(`${API_URL}/products`);
+}
+
+export async function fetchProductsByCategory(
+  slug: string
+): Promise<Product[]> {
+  return getJson<Product[]>(`${API_URL}/products?category=${slug}`);
+}
+
+export async function fetchCategory(slug: string): Promise<Category | null> {
+  const res = await fetch(`${API_URL}/categories/${slug}`);
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch category ${slug}`);
+  }
+
+  return res.json();
+}
+
+export async function fetchProductBySlug(
+  slug: string
+): Promise<Product | null> {
+  const products = await getJson<Product[]>(
+    `${API_URL}/products?slug=${slug}`
+  );
+
+  return products[0] ?? null;
 }
 
 const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
@@ -50,6 +90,19 @@ export function formatPrice(value: number): string {
 
 export function formatPct(pct: number): string {
   return `${toBn(Math.abs(pct).toFixed(1))}%`;
+}
+
+export function formatAvg(min: number, max: number): string {
+  const avg = (min + max) / 2;
+
+  return Number.isInteger(avg) ? formatPrice(avg) : toBn(avg.toFixed(1));
+}
+
+export function formatDateBn(): string {
+  return new Date().toLocaleDateString("bn-BD", {
+    day: "numeric",
+    month: "long",
+  });
 }
 
 const UNIT_NAMES: Record<string, string> = {

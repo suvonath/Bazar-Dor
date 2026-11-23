@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   encodeSession,
+  getSessionUser,
   SESSION_COOKIE,
   SESSION_MAX_AGE,
   type SessionUser,
@@ -80,4 +81,21 @@ export async function signOutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
   redirect("/");
+}
+
+export async function updateProfileAction(formData: FormData) {
+  const user = await getSessionUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+
+  if (!name) {
+    redirect("/profile?error=name");
+  }
+
+  await startSession({ ...user, name });
+  redirect("/profile?updated=1");
 }

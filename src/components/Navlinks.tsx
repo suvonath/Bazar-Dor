@@ -1,4 +1,4 @@
-import Link from "next/link";
+import NavLink from "./NavLink";
 
 interface Category {
   id: string;
@@ -19,21 +19,15 @@ const Navlinks = async () => {
   const categories: Category[] = await res.json();
 
   return (
-    <nav
-      aria-label="Product Categories"
-      className="overflow-x-auto"
-    >
-      <ul className="mx-auto flex max-w-5xl items-center gap-7 px-4 py-3 text-sm text-gray-600">
+    <nav aria-label="Product Categories" className="overflow-x-auto">
+      <ul className="mx-auto flex max-w-5xl items-center gap-1 px-4 py-3 text-sm text-gray-600">
         {categories.map((category) => (
           <li key={category.id} className="shrink-0">
-            <Link
+            <NavLink
               href={`/categories/${category.slug}`}
-              prefetch={false}
-              className="flex items-center gap-1.5 whitespace-nowrap transition-colors hover:text-green-700"
-            >
-              <span aria-hidden="true">{category.icon}</span>
-              <span>{category.nameBn}</span>
-            </Link>
+              icon={category.icon}
+              label={category.nameBn}
+            />
           </li>
         ))}
       </ul>

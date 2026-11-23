@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import Navlinks from "./Navlinks";
 import MarqueeSection from "./MarqueeSection";
 import { getSessionUser } from "@/lib/auth";
-import { signOutAction } from "@/app/actions/auth";
 
 const BasketIcon = () => (
   <svg
@@ -58,31 +57,18 @@ const Header = async () => {
           </Link>
 
           {user ? (
-            <details className="relative">
-              <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-700">
-                  {user.name.slice(0, 1)}
-                </span>
-                <span className="text-sm font-semibold text-gray-900">
-                  {user.name}
-                </span>
-                <ChevronDown />
-              </summary>
-
-              <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
-                <p className="truncate px-3 py-2 text-xs text-gray-500">
-                  {user.email}
-                </p>
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    সাইন আউট
-                  </button>
-                </form>
-              </div>
-            </details>
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-gray-50"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-700">
+                {user.name.slice(0, 1)}
+              </span>
+              <span className="text-sm font-semibold text-gray-900">
+                {user.name}
+              </span>
+              <ChevronDown />
+            </Link>
           ) : (
             <nav aria-label="Authentication" className="flex items-center gap-2">
               <Link

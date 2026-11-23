@@ -105,7 +105,7 @@ const AuthForm = ({ mode, error }: AuthFormProps) => {
           required
           minLength={8}
           autoComplete={isSignUp ? "new-password" : "current-password"}
-          placeholder={isSignUp ? "কমপক্ষে ৮ অক্ষর" : "আপনার পাসওয়ার্ড"}
+          placeholder="কমপক্ষে ৮ অক্ষর"
           className={inputClass}
         />
       </div>
@@ -132,7 +132,7 @@ const AuthForm = ({ mode, error }: AuthFormProps) => {
         type="submit"
         className="w-full rounded-lg bg-green-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-green-800"
       >
-        {isSignUp ? "অ্যাকাউন্ট তৈরি করুন" : "সাইন ইন করুন"}
+        {isSignUp ? "অ্যাকাউন্ট তৈরি করুন" : "সাইন ইন"}
       </button>
 
       <div className="flex items-center gap-3 py-1 text-xs text-gray-400">

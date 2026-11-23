@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Product } from "@/lib/products";
 import { formatPct, formatPrice, unitLabel } from "@/lib/products";
 
@@ -6,7 +7,10 @@ const PriceCard = ({ product }: { product: Product }) => {
   const rising = dir === "up";
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-4">
+    <Link
+      href={`/products/${product.slug}`}
+      className="block rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-green-300 hover:shadow-sm"
+    >
       <div className="flex items-start gap-3">
         <div
           aria-hidden="true"
@@ -45,7 +49,7 @@ const PriceCard = ({ product }: { product: Product }) => {
           {formatPct(product.change.pct)}
         </span>
       </div>
-    </article>
+    </Link>
   );
 };
 
