@@ -16,6 +16,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   password: "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।",
   match: "দুটি পাসওয়ার্ড মিলছে না।",
   invalid: "ইমেইল ও পাসওয়ার্ড সঠিকভাবে দিন।",
+  exists: "এই ইমেইল দিয়ে একটি অ্যাকাউন্ট ইতিমধ্যে আছে।",
+  credentials: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।",
+  social: "সোশ্যাল সাইন ইন এখনো চালু হয়নি।",
 };
 
 const labelClass = "block text-sm font-semibold text-gray-800";

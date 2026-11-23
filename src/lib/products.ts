@@ -35,7 +35,9 @@ export interface Category {
 const API_URL = "https://openapi.programming-hero.com/api/bazardor";
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    next: { revalidate: 300 },
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch ${url}`);
@@ -51,11 +53,15 @@ export async function fetchProducts(): Promise<Product[]> {
 export async function fetchProductsByCategory(
   slug: string
 ): Promise<Product[]> {
-  return getJson<Product[]>(`${API_URL}/products?category=${slug}`);
+  return getJson<Product[]>(
+    `${API_URL}/products?category=${encodeURIComponent(slug)}`
+  );
 }
 
 export async function fetchCategory(slug: string): Promise<Category | null> {
-  const res = await fetch(`${API_URL}/categories/${slug}`);
+  const res = await fetch(`${API_URL}/categories/${encodeURIComponent(slug)}`, {
+    next: { revalidate: 300 },
+  });
 
   if (res.status === 404) {
     return null;
@@ -72,7 +78,7 @@ export async function fetchProductBySlug(
   slug: string
 ): Promise<Product | null> {
   const products = await getJson<Product[]>(
-    `${API_URL}/products?slug=${slug}`
+    `${API_URL}/products?slug=${encodeURIComponent(slug)}`
   );
 
   return products[0] ?? null;
@@ -96,6 +102,34 @@ export function formatAvg(min: number, max: number): string {
   const avg = (min + max) / 2;
 
   return Number.isInteger(avg) ? formatPrice(avg) : toBn(avg.toFixed(1));
+}
+
+export interface PriceSummary {
+  min: number;
+  max: number;
+  average: number;
+}
+
+export function getPriceSummary(product: Product): PriceSummary {
+  if (product.markets.length === 0) {
+    return {
+      min: product.today,
+      max: product.today,
+      average: product.today,
+    };
+  }
+
+  const midpoints = product.markets.map(
+    (market) => (market.min + market.max) / 2
+  );
+
+  return {
+    min: Math.min(...product.markets.map((market) => market.min)),
+    max: Math.max(...product.markets.map((market) => market.max)),
+    average: Math.round(
+      midpoints.reduce((total, value) => total + value, 0) / midpoints.length
+    ),
+  };
 }
 
 export function formatDateBn(): string {

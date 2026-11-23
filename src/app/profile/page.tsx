@@ -47,9 +47,19 @@ export default async function ProfilePage({
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-lg font-bold text-green-700">
-                {user.name.slice(0, 1)}
-              </span>
+              {user.image ? (
+                // eslint-disable-next-line @next/next/no-img-element -- avatar URL can come from any auth provider
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  referrerPolicy="no-referrer"
+                  className="h-14 w-14 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-lg font-bold text-green-700">
+                  {user.name.slice(0, 1)}
+                </span>
+              )}
               <div className="min-w-0">
                 <p className="truncate text-lg font-bold text-gray-900">
                   {user.name}

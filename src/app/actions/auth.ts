@@ -1,25 +1,22 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { APIError } from "better-auth";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  encodeSession,
-  getSessionUser,
-  SESSION_COOKIE,
-  SESSION_MAX_AGE,
-  type SessionUser,
-} from "@/lib/auth";
+import { auth, getSessionUser } from "@/lib/auth";
 
-async function startSession(user: SessionUser) {
-  const cookieStore = await cookies();
+function authErrorCode(error: unknown, fallback: string) {
+  if (error instanceof APIError) {
+    if (error.body?.code === "USER_ALREADY_EXISTS") {
+      return "exists";
+    }
 
-  cookieStore.set(SESSION_COOKIE, encodeSession(user), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
+    if (error.status === 401 || error.status === 403) {
+      return "credentials";
+    }
+  }
+
+  return fallback;
 }
 
 export async function signUpAction(formData: FormData) {
@@ -44,7 +41,14 @@ export async function signUpAction(formData: FormData) {
     redirect("/sign-up?error=match");
   }
 
-  await startSession({ name, email });
+  try {
+    await auth.api.signUpEmail({
+      body: { name, email, password },
+    });
+  } catch (error) {
+    redirect(`/sign-up?error=${authErrorCode(error, "failed")}`);
+  }
+
   redirect("/");
 }
 
@@ -60,26 +64,43 @@ export async function signInAction(formData: FormData) {
     redirect("/sign-in?error=password");
   }
 
-  const name = email.split("@")[0];
+  try {
+    await auth.api.signInEmail({
+      body: { email, password },
+    });
+  } catch (error) {
+    redirect(`/sign-in?error=${authErrorCode(error, "credentials")}`);
+  }
 
-  await startSession({ name, email });
   redirect("/");
 }
 
 export async function socialSignInAction(formData: FormData) {
-  const provider = String(formData.get("provider") ?? "Google");
+  const provider = String(formData.get("provider") ?? "Google").toLowerCase();
+  let url: string | undefined;
 
-  // Placeholder until BetterAuth's OAuth providers are configured.
-  await startSession({
-    name: `${provider} ব্যবহারকারী`,
-    email: `user@${provider.toLowerCase()}.example`,
-  });
-  redirect("/");
+  try {
+    const result = await auth.api.signInSocial({
+      body: { provider, callbackURL: "/" },
+    });
+
+    url = result.url;
+  } catch {
+    redirect("/sign-in?error=social");
+  }
+
+  if (!url) {
+    redirect("/sign-in?error=social");
+  }
+
+  redirect(url);
 }
 
 export async function signOutAction() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
+  await auth.api.signOut({
+    headers: await headers(),
+  });
+
   redirect("/");
 }
 
@@ -96,6 +117,14 @@ export async function updateProfileAction(formData: FormData) {
     redirect("/profile?error=name");
   }
 
-  await startSession({ ...user, name });
+  try {
+    await auth.api.updateUser({
+      body: { name },
+      headers: await headers(),
+    });
+  } catch {
+    redirect("/profile?error=name");
+  }
+
   redirect("/profile?updated=1");
 }

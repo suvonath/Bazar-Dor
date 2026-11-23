@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import Navlinks from "./Navlinks";
 import MarqueeSection from "./MarqueeSection";
+import UserMenu from "./UserMenu";
 import { getSessionUser } from "@/lib/auth";
 
 const BasketIcon = () => (
@@ -18,21 +19,6 @@ const BasketIcon = () => (
     <path d="M4 9h16l-1.4 8.6a2 2 0 0 1-2 1.7H7.4a2 2 0 0 1-2-1.7L4 9Z" />
     <path d="m8.5 9 2.2-4.5M15.5 9l-2.2-4.5" />
     <path d="M9.5 13v3M14.5 13v3" />
-  </svg>
-);
-
-const ChevronDown = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.8}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-4 w-4 text-gray-500"
-    aria-hidden="true"
-  >
-    <path d="m6 8 4 4 4-4" />
   </svg>
 );
 
@@ -57,18 +43,11 @@ const Header = async () => {
           </Link>
 
           {user ? (
-            <Link
-              href="/profile"
-              className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-gray-50"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-700">
-                {user.name.slice(0, 1)}
-              </span>
-              <span className="text-sm font-semibold text-gray-900">
-                {user.name}
-              </span>
-              <ChevronDown />
-            </Link>
+            <UserMenu
+              name={user.name}
+              email={user.email}
+              image={user.image}
+            />
           ) : (
             <nav aria-label="Authentication" className="flex items-center gap-2">
               <Link
