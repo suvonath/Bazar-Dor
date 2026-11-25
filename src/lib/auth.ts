@@ -42,6 +42,7 @@ function getDb(): { db: Db; client: MongoClient } | undefined {
 const connection = getDb();
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: {
     enabled: true,
     // Sign-up must land on the login page (per spec) instead of auto-login.
