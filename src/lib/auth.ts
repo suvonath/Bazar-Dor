@@ -41,6 +41,18 @@ function getDb(): { db: Db; client: MongoClient } | undefined {
 
 const connection = getDb();
 
+/**
+ * Captures the last unhandled auth error so the route handler can surface it
+ * while diagnosing production failures. Read via `takeAuthError()`.
+ */
+let lastAuthError: unknown = null;
+
+export function takeAuthError(): unknown {
+  const error = lastAuthError;
+  lastAuthError = null;
+  return error;
+}
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: {
@@ -62,6 +74,13 @@ export const auth = betterAuth({
   // inline and as a react-hot-toast message (instead of a raw error page).
   onAPIError: {
     errorURL: "/sign-in",
+    onError: (error) => {
+      lastAuthError = error;
+      console.error(
+        "[auth] unhandled error:",
+        error instanceof Error ? `${error.name}: ${error.message}` : error,
+      );
+    },
   },
   database: connection
     ? mongodbAdapter(connection.db, { client: connection.client })
