@@ -10,8 +10,8 @@ interface ChangeBadgeProps {
 }
 
 const TONE_CLASS: Record<ChangeDirection, string> = {
-  up: "bg-red-50 text-red-600",
-  down: "bg-emerald-50 text-emerald-600",
+  up: "bg-emerald-50 text-emerald-600",
+  down: "bg-red-50 text-red-600",
   flat: "bg-gray-100 text-gray-500",
 };
 

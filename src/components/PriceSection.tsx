@@ -24,7 +24,7 @@ const PriceSection = ({
         {direction ? (
           <span
             aria-hidden="true"
-            className={rising ? "text-red-500" : "text-emerald-600"}
+            className={rising ? "text-emerald-600" : "text-red-500"}
           >
             {rising ? "▲" : "▼"}
           </span>
@@ -36,7 +36,7 @@ const PriceSection = ({
         <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
       ) : null}
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {products.map((product) => (
           <PriceCard key={product.id} product={product} />
         ))}

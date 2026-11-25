@@ -20,9 +20,9 @@ Bengali-language (`lang="bn"`) Next.js 16 App Router site for Bangladesh market 
 ## Structure and wiring
 
 - App code lives in `src/app`; `@/*` maps to `./src/*`. README's `app/page.tsx` is stale `create-next-app` boilerplate.
-- `src/app/layout.tsx` is the only root layout: loads Google font Hind Siliguri (latin + bengali) and mounts Header/Footer around children.
-- Header's `Navlinks` and `MarqueeSection` are async Server Components that `fetch` `https://openapi.programming-hero.com/api/bazardor/{categories,products}` at render inside one `<Suspense>`. There are no API routes or local data layer; dev/build need that network (and Google fonts) and throw on non-OK API responses.
-- Nav links point to `/categories/[slug]`, but that route is not implemented yet.
+- `src/app/layout.tsx` is the only root layout: loads Google font Hind Siliguri (latin + bengali), mounts Header/Footer around children, and renders the react-hot-toast `Toaster` plus `ToastHandler` (reads `?toast=` / `?error=` / `?reason=` params into toasts).
+- Header's `Navlinks` and `MarqueeSection` are async Server Components that call `fetchCategories()` / `fetchProducts()` (`src/lib/products.ts`, revalidate 300) at render inside one `<Suspense>`. There are no local data routes; dev/build need that network (and Google fonts), and API failures now fall back to empty lists instead of throwing.
+- `src/proxy.ts` (Next 16's middleware — renamed `proxy`) guards `/profile*` and `/products*`: guests are redirected to `/sign-in?reason=protected`. Better Auth (`src/lib/auth.ts`, MongoDB adapter) powers `/sign-in`, `/sign-up`, `/profile`, `/profile/update` and the `src/app/api/auth/[...all]` handler; social providers are Google + GitHub.
 
 ## Toolchain quirks
 

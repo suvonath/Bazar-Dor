@@ -17,7 +17,7 @@ export default async function Home() {
 
   return (
     <main className="flex-1 bg-[#f7f9f5]">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
         <HomeHero />
 
         <PriceSection
@@ -35,7 +35,7 @@ export default async function Home() {
         />
 
         <PriceSection
-          id="all-products"
+          id="সব-পণ্য"
           title="সব পণ্য"
           subtitle={`মোট ${toBn(products.length)}টি পণ্য • প্রতিদিন হালনাগাদ`}
           products={products}

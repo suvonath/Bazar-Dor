@@ -4,22 +4,13 @@ import {
   signUpAction,
   socialSignInAction,
 } from "@/app/actions/auth";
+import { ERROR_MESSAGES } from "@/lib/messages";
+import SubmitButton from "./SubmitButton";
 
 interface AuthFormProps {
   mode: "sign-in" | "sign-up";
   error?: string;
 }
-
-const ERROR_MESSAGES: Record<string, string> = {
-  missing: "সব ঘর পূরণ করুন।",
-  email: "সঠিক ইমেইল দিন।",
-  password: "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।",
-  match: "দুটি পাসওয়ার্ড মিলছে না।",
-  invalid: "ইমেইল ও পাসওয়ার্ড সঠিকভাবে দিন।",
-  exists: "এই ইমেইল দিয়ে একটি অ্যাকাউন্ট ইতিমধ্যে আছে।",
-  credentials: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।",
-  social: "সোশ্যাল সাইন ইন এখনো চালু হয়নি।",
-};
 
 const labelClass = "block text-sm font-semibold text-gray-800";
 const inputClass =
@@ -58,113 +49,122 @@ const AuthForm = ({ mode, error }: AuthFormProps) => {
   const isSignUp = mode === "sign-up";
 
   return (
-    <form action={isSignUp ? signUpAction : signInAction} className="space-y-4">
-      {error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-          {ERROR_MESSAGES[error] ?? "কিছু ভুল হয়েছে, আবার চেষ্টা করুন।"}
-        </p>
-      ) : null}
+    <div className="space-y-4">
+      <form action={isSignUp ? signUpAction : signInAction} className="space-y-4">
+        {error ? (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            {ERROR_MESSAGES[error] ?? "কিছু ভুল হয়েছে, আবার চেষ্টা করুন।"}
+          </p>
+        ) : null}
 
-      {isSignUp ? (
+        {isSignUp ? (
+          <div>
+            <label htmlFor="name" className={labelClass}>
+              নাম
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              autoComplete="name"
+              placeholder="যেমন: রবিউল ইসলাম"
+              className={inputClass}
+            />
+          </div>
+        ) : null}
+
         <div>
-          <label htmlFor="name" className={labelClass}>
-            নাম
+          <label htmlFor="email" className={labelClass}>
+            ইমেইল
           </label>
           <input
-            id="name"
-            name="name"
-            type="text"
+            id="email"
+            name="email"
+            type="email"
             required
-            autoComplete="name"
-            placeholder="যেমন: রবিউল ইসলাম"
+            autoComplete="email"
+            placeholder="you@example.com"
             className={inputClass}
           />
         </div>
-      ) : null}
 
-      <div>
-        <label htmlFor="email" className={labelClass}>
-          ইমেইল
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder="you@example.com"
-          className={inputClass}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="password" className={labelClass}>
-          পাসওয়ার্ড
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete={isSignUp ? "new-password" : "current-password"}
-          placeholder="কমপক্ষে ৮ অক্ষর"
-          className={inputClass}
-        />
-      </div>
-
-      {isSignUp ? (
         <div>
-          <label htmlFor="confirmPassword" className={labelClass}>
-            পাসওয়ার্ড নিশ্চিত করুন
+          <label htmlFor="password" className={labelClass}>
+            পাসওয়ার্ড
           </label>
           <input
-            id="confirmPassword"
-            name="confirmPassword"
+            id="password"
+            name="password"
             type="password"
             required
             minLength={8}
-            autoComplete="new-password"
-            placeholder="আবার লিখুন"
+            autoComplete={isSignUp ? "new-password" : "current-password"}
+            placeholder="কমপক্ষে ৮ অক্ষর"
             className={inputClass}
           />
         </div>
-      ) : null}
 
-      <button
-        type="submit"
-        className="w-full rounded-lg bg-green-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-green-800"
-      >
-        {isSignUp ? "অ্যাকাউন্ট তৈরি করুন" : "সাইন ইন"}
-      </button>
+        {isSignUp ? (
+          <div>
+            <label htmlFor="confirmPassword" className={labelClass}>
+              পাসওয়ার্ড নিশ্চিত করুন
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              placeholder="আবার লিখুন"
+              className={inputClass}
+            />
+          </div>
+        ) : null}
 
-      <div className="flex items-center gap-3 py-1 text-xs text-gray-400">
-        <span className="h-px flex-1 bg-gray-200" />
-        অথবা
-        <span className="h-px flex-1 bg-gray-200" />
-      </div>
+        <SubmitButton
+          pendingText={isSignUp ? "তৈরি হচ্ছে..." : "সাইন ইন হচ্ছে..."}
+          className="w-full rounded-lg bg-green-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSignUp ? "অ্যাকাউন্ট তৈরি করুন" : "সাইন ইন"}
+        </SubmitButton>
 
+        <div className="flex items-center gap-3 py-1 text-xs text-gray-400">
+          <span className="h-px flex-1 bg-gray-200" />
+          অথবা
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+      </form>
+
+      {/*
+        Social login lives in its own forms with a hidden `provider` input:
+        a <button formAction={fn}> makes React overwrite the button's name
+        with $ACTION_ID_..., which would lose the provider value (the GitHub
+        button used to fall back to Google).
+      */}
       <div className="grid grid-cols-2 gap-3">
-        <button
-          type="submit"
-          formAction={socialSignInAction}
-          name="provider"
-          value="Google"
-          className={socialButtonClass}
-        >
-          <GoogleIcon />
-          Google দিয়ে চালিয়ে যান
-        </button>
-        <button
-          type="submit"
-          formAction={socialSignInAction}
-          name="provider"
-          value="GitHub"
-          className={socialButtonClass}
-        >
-          <GitHubIcon />
-          GitHub দিয়ে চালিয়ে যান
-        </button>
+        <form action={socialSignInAction}>
+          <input type="hidden" name="provider" value="Google" />
+          <SubmitButton
+            pendingText="যাচাই হচ্ছে..."
+            className={`w-full ${socialButtonClass}`}
+          >
+            <GoogleIcon />
+            Google দিয়ে চালিয়ে যান
+          </SubmitButton>
+        </form>
+
+        <form action={socialSignInAction}>
+          <input type="hidden" name="provider" value="GitHub" />
+          <SubmitButton
+            pendingText="যাচাই হচ্ছে..."
+            className={`w-full ${socialButtonClass}`}
+          >
+            <GitHubIcon />
+            GitHub দিয়ে চালিয়ে যান
+          </SubmitButton>
+        </form>
       </div>
 
       <p className="pt-1 text-center text-sm text-gray-600">
@@ -190,7 +190,7 @@ const AuthForm = ({ mode, error }: AuthFormProps) => {
           </>
         )}
       </p>
-    </form>
+    </div>
   );
 };
 

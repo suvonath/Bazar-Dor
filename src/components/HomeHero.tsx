@@ -21,7 +21,7 @@ const HomeHero = () => {
         </p>
 
         <Link
-          href="#all-products"
+          href="#সব-পণ্য"
           className="mt-6 inline-flex rounded-lg bg-green-700 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-green-800"
         >
           সব দাম দেখুন

@@ -49,7 +49,8 @@ export async function signUpAction(formData: FormData) {
     redirect(`/sign-up?error=${authErrorCode(error, "failed")}`);
   }
 
-  redirect("/");
+  // Spec: after registering, take the user to the login page with a toast.
+  redirect("/sign-in?toast=signup");
 }
 
 export async function signInAction(formData: FormData) {
@@ -72,7 +73,7 @@ export async function signInAction(formData: FormData) {
     redirect(`/sign-in?error=${authErrorCode(error, "credentials")}`);
   }
 
-  redirect("/");
+  redirect("/?toast=signin");
 }
 
 export async function socialSignInAction(formData: FormData) {
@@ -81,7 +82,7 @@ export async function socialSignInAction(formData: FormData) {
 
   try {
     const result = await auth.api.signInSocial({
-      body: { provider, callbackURL: "/" },
+      body: { provider, callbackURL: "/?toast=signin" },
     });
 
     url = result.url;
@@ -101,7 +102,7 @@ export async function signOutAction() {
     headers: await headers(),
   });
 
-  redirect("/");
+  redirect("/?toast=signout");
 }
 
 export async function updateProfileAction(formData: FormData) {
@@ -126,5 +127,5 @@ export async function updateProfileAction(formData: FormData) {
     redirect("/profile?error=name");
   }
 
-  redirect("/profile?updated=1");
+  redirect("/profile?toast=updated");
 }

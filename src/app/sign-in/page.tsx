@@ -23,7 +23,7 @@ export default async function SignInPage({
 
   return (
     <main className="flex-1 bg-[#f7f9f5]">
-      <div className="mx-auto max-w-5xl px-4 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="mx-auto max-w-[400px]">
           <h1 className="text-center text-2xl font-bold text-gray-900">
             সাইন ইন

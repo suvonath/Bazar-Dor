@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import ChangeBadge from "@/components/ChangeBadge";
 import {
   fetchProductBySlug,
   formatAvg,
+  formatPct,
   formatPrice,
   getPriceSummary,
+  toBn,
   unitLabel,
   unitName,
 } from "@/lib/products";
+import { getSessionUser } from "@/lib/auth";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -37,6 +40,14 @@ export async function generateMetadata({
 
 const ProductPage = async ({ params }: PageProps) => {
   const { slug } = await params;
+
+  // Defense in depth: proxy.ts already blocks guests, this guards the data too.
+  const user = await getSessionUser();
+
+  if (!user) {
+    redirect("/sign-in?reason=protected");
+  }
+
   const product = await fetchProductBySlug(slug);
 
   if (!product) {
@@ -44,20 +55,35 @@ const ProductPage = async ({ params }: PageProps) => {
   }
 
   const summary = getPriceSummary(product);
+  const marketCount = toBn(product.markets.length);
+
+  const changeText =
+    product.change.dir === "up"
+      ? `গতকালের তুলনায় আজ দাম ▲ ${formatPct(product.change.pct)}`
+      : product.change.dir === "down"
+        ? `গতকালের তুলনায় আজ দাম ▼ ${formatPct(product.change.pct)}`
+        : "গতকালের তুলনায় আজ দাম প্রায় অপরিবর্তিত";
+
+  const changeTone =
+    product.change.dir === "up"
+      ? "text-emerald-600"
+      : product.change.dir === "down"
+        ? "text-red-500"
+        : "text-gray-500";
 
   const stats = [
     {
       label: "সর্বনিম্ন দাম",
       value: summary.min,
       arrow: "▼",
-      tone: "text-emerald-600",
+      tone: "text-red-500",
       note: "সব বাজারের মধ্যে সর্বনিম্ন",
     },
     {
       label: "সর্বোচ্চ দাম",
       value: summary.max,
       arrow: "▲",
-      tone: "text-red-500",
+      tone: "text-emerald-600",
       note: "সব বাজারের মধ্যে সর্বোচ্চ",
     },
     {
@@ -71,7 +97,7 @@ const ProductPage = async ({ params }: PageProps) => {
 
   return (
     <main className="flex-1 bg-[#f0f5f1]">
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="mx-auto max-w-6xl px-4 py-6">
         <nav
           aria-label="Breadcrumb"
           className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500"
@@ -104,9 +130,26 @@ const ProductPage = async ({ params }: PageProps) => {
                 <h1 className="text-2xl font-bold text-gray-900">
                   {product.nameBn}
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  {unitLabel(product.unit)}
+
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/categories/${product.category}`}
+                    className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 ring-1 ring-green-100 transition-colors hover:bg-green-100"
+                  >
+                    <span aria-hidden="true">{product.categoryIcon}</span>
+                    {product.categoryNameBn}
+                  </Link>
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                    {unitLabel(product.unit)}
+                  </span>
+                </div>
+
+                <p className="mt-2 text-sm text-gray-500">
+                  <span className={changeTone}>{changeText}</span>
+                  {" • "}
+                  {marketCount}টি বাজারে বিক্রি হচ্ছে
                 </p>
+
                 <p className="mt-1 text-sm text-gray-500">
                   সর্বনিম্ন-সর্বোচ্চ: {formatPrice(summary.min)} –{" "}
                   {formatPrice(summary.max)} টাকা

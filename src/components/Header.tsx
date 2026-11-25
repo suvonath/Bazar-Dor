@@ -29,7 +29,7 @@ const Header = async () => {
   return (
     <header className="bg-white">
       <div className="border-b border-gray-100">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <Link href="/" className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white">
               <BasketIcon />

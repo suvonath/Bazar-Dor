@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { signOutAction, updateProfileAction } from "@/app/actions/auth";
+import { signOutAction } from "@/app/actions/auth";
 import { getSessionUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -23,18 +24,28 @@ const LogoutIcon = () => (
   </svg>
 );
 
-export default async function ProfilePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ updated?: string; error?: string }>;
-}) {
+const EditIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden="true"
+  >
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </svg>
+);
+
+export default async function ProfilePage() {
   const user = await getSessionUser();
 
   if (!user) {
-    redirect("/sign-in");
+    redirect("/sign-in?reason=protected");
   }
-
-  const { updated, error } = await searchParams;
 
   return (
     <main className="flex-1 bg-[#f7f9f5]">
@@ -80,45 +91,20 @@ export default async function ProfilePage({
           </div>
         </div>
 
+        {/* Spec: an update button that takes the user to another route. */}
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
           <h2 className="text-base font-bold text-gray-900">তথ্য</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            আপনার নামপরিবর্তন করতে আপডেট পাতায় যান।
+          </p>
 
-          <form action={updateProfileAction} className="mt-4 space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-semibold text-gray-800"
-              >
-                নাম
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                defaultValue={user.name}
-                placeholder="আপনার নাম"
-                className="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-green-600 focus:ring-2 focus:ring-green-100"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-green-700 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-green-800"
-            >
-              আপডেট
-            </button>
-          </form>
-
-          {updated ? (
-            <p className="mt-3 text-sm text-green-700">
-              প্রোফাইল আপডেট হয়েছে।
-            </p>
-          ) : null}
-
-          {error ? (
-            <p className="mt-3 text-sm text-red-600">নাম লিখুন।</p>
-          ) : null}
+          <Link
+            href="/profile/update"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800"
+          >
+            <EditIcon />
+            তথ্য আপডেট করুন
+          </Link>
         </div>
       </div>
     </main>

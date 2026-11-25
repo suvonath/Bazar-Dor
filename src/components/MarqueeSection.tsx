@@ -2,11 +2,11 @@ import React from "react";
 import MarqueeText from "react-marquee-text";
 import "react-marquee-text/dist/styles.css";
 import type { Product } from "@/lib/products";
-import { formatPct, formatPrice, unitName } from "@/lib/products";
+import { fetchProducts, formatPct, formatPrice, unitName } from "@/lib/products";
 
 const toneClass = (dir: Product["change"]["dir"]) => {
-  if (dir === "up") return "text-red-500";
-  if (dir === "down") return "text-emerald-600";
+  if (dir === "up") return "text-emerald-600";
+  if (dir === "down") return "text-red-500";
   return "text-gray-400";
 };
 
@@ -17,15 +17,11 @@ const arrow = (dir: Product["change"]["dir"]) => {
 };
 
 const MarqueeSection = async () => {
-  const res = await fetch(
-    "https://openapi.programming-hero.com/api/bazardor/products"
-  );
+  const products = await fetchProducts();
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch products");
+  if (products.length === 0) {
+    return null;
   }
-
-  const products: Product[] = await res.json();
 
   return (
     <MarqueeText direction="right" duration={19}>

@@ -46,42 +46,68 @@ async function getJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
+/**
+ * All helpers degrade gracefully: if the public API is unreachable the pages
+ * render with empty data instead of crashing (spec: reloading must never error).
+ */
 export async function fetchProducts(): Promise<Product[]> {
-  return getJson<Product[]>(`${API_URL}/products`);
+  try {
+    return await getJson<Product[]>(`${API_URL}/products`);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchCategories(): Promise<Category[]> {
+  try {
+    return await getJson<Category[]>(`${API_URL}/categories`);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchProductsByCategory(
   slug: string
 ): Promise<Product[]> {
-  return getJson<Product[]>(
-    `${API_URL}/products?category=${encodeURIComponent(slug)}`
-  );
+  try {
+    return await getJson<Product[]>(
+      `${API_URL}/products?category=${encodeURIComponent(slug)}`
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchCategory(slug: string): Promise<Category | null> {
-  const res = await fetch(`${API_URL}/categories/${encodeURIComponent(slug)}`, {
-    next: { revalidate: 300 },
-  });
+  try {
+    const res = await fetch(`${API_URL}/categories/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 300 },
+    });
 
-  if (res.status === 404) {
+    if (!res.ok) {
+      // 404 (invalid slug) and API failures both fall through to the
+      // friendly not-found page instead of an error page.
+      return null;
+    }
+
+    return await res.json();
+  } catch {
     return null;
   }
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch category ${slug}`);
-  }
-
-  return res.json();
 }
 
 export async function fetchProductBySlug(
   slug: string
 ): Promise<Product | null> {
-  const products = await getJson<Product[]>(
-    `${API_URL}/products?slug=${encodeURIComponent(slug)}`
-  );
+  try {
+    const products = await getJson<Product[]>(
+      `${API_URL}/products?slug=${encodeURIComponent(slug)}`
+    );
 
-  return products[0] ?? null;
+    return products[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 const BN_DIGITS = "০১২৩৪৫৬৭৮৯";

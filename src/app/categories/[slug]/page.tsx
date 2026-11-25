@@ -34,7 +34,7 @@ const CategoryPage = async ({ params }: PageProps) => {
 
   return (
     <main className="flex-1 bg-[#f0f5f1]">
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="mx-auto max-w-6xl px-4 py-6">
         <section className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/80 p-4">
           <span
             aria-hidden="true"

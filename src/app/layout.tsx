@@ -1,9 +1,12 @@
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Toaster from "@/components/Toaster";
+import ToastHandler from "@/components/ToastHandler";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["latin", "bengali"],
@@ -30,6 +33,10 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <Toaster />
+        <Suspense fallback={null}>
+          <ToastHandler />
+        </Suspense>
       </body>
     </html>
   );
